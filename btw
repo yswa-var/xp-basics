@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: btw <lesson.rs> [-- <args>]"
+  exit 1
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LRN_DIR="$SCRIPT_DIR/lrn"
+
+lesson="$1"; shift || true
+
+if [[ "$lesson" == *.rs ]]; then
+  filename="$lesson"
+else
+  filename="$lesson.rs"
+fi
+
+src_path="$LRN_DIR/$filename"
+if [[ ! -f "$src_path" ]]; then
+  echo "Lesson not found: $src_path"
+  exit 1
+fi
+
+bin_name=".btw-$(basename "$filename" .rs)"
+out_bin="$LRN_DIR/$bin_name"
+
+RUSTFLAGS="${RUSTFLAGS:-}"
+
+echo "Compiling $src_path -> $out_bin"
+rustc -C debuginfo=1 "$src_path" -o "$out_bin"
+
+echo "Running $bin_name"
+"$out_bin" "$@"
